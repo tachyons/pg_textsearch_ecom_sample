@@ -92,6 +92,7 @@ jobs:
             https://github.com/timescale/pg_textsearch/releases/download/v1.5.1/pg-textsearch-v1.5.1-pg17-amd64.zip
           unzip -o /tmp/pg_textsearch.zip -d /tmp/pg_textsearch
           sudo dpkg -i /tmp/pg_textsearch/*.deb
+          sudo pg_createcluster 17 main --start || true
           sudo sed -i "s/^#*shared_preload_libraries.*/shared_preload_libraries = 'pg_textsearch'/" \
             /etc/postgresql/17/main/postgresql.conf
           sudo pg_ctlcluster 17 main restart

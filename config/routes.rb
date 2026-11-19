@@ -12,13 +12,13 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "products#index"
 
-  resources :products, only: [:index, :show], param: :slug do
+  resources :products, only: [ :index, :show ], param: :slug do
     collection do
       get :autocomplete
     end
   end
 
-  resources :categories, only: [:show], param: :slug
-  resource :cart, only: [:show]
-  resources :cart_items, only: [:create, :update, :destroy]
+  resources :categories, only: [ :show ], param: :slug
+  resource :cart, only: [ :show ]
+  resources :cart_items, only: [ :create, :update, :destroy ]
 end

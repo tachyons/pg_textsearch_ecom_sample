@@ -35,19 +35,19 @@ module ProductsHelper
     Array(fp[:category_ids]).each do |id|
       cat = Category.find_by(id: id)
       next unless cat
-      chips << active_filter_chip(cat.name, "category_ids", id, category_ids: Array(fp[:category_ids]) - [id])
+      chips << active_filter_chip(cat.name, "category_ids", id, category_ids: Array(fp[:category_ids]) - [ id ])
     end
 
     Array(fp[:brand_ids]).each do |id|
       brand = Brand.find_by(id: id)
       next unless brand
-      chips << active_filter_chip(brand.name, "brand_ids", id, brand_ids: Array(fp[:brand_ids]) - [id])
+      chips << active_filter_chip(brand.name, "brand_ids", id, brand_ids: Array(fp[:brand_ids]) - [ id ])
     end
 
     Array(fp[:label_ids]).each do |id|
       label = Label.find_by(id: id)
       next unless label
-      chips << active_filter_chip(label.name, "label_ids", id, label_ids: Array(fp[:label_ids]) - [id])
+      chips << active_filter_chip(label.name, "label_ids", id, label_ids: Array(fp[:label_ids]) - [ id ])
     end
 
     if fp[:price_bucket].present?
@@ -235,43 +235,43 @@ module ProductsHelper
 
     # Dimensions and container classes
     container_class = case size
-                      when :thumb
+    when :thumb
                         "w-12 h-12 rounded-lg"
-                      when :card
+    when :card
                         "w-full aspect-[4/3] rounded-xl"
-                      when :hero
+    when :hero
                         "w-full aspect-square rounded-2xl"
-                      else
+    else
                         "w-full aspect-[4/3] rounded-xl"
-                      end
+    end
 
     svg_content = if category_slug.include?("smartphone") || name_down.include?("iphone") || name_down.include?("galaxy s") || name_down.include?("pixel")
                     smartphone_svg(size)
-                  elsif category_slug.include?("laptop") || name_down.include?("macbook") || name_down.include?("thinkpad") || name_down.include?("xps") || name_down.include?("zephyrus")
+    elsif category_slug.include?("laptop") || name_down.include?("macbook") || name_down.include?("thinkpad") || name_down.include?("xps") || name_down.include?("zephyrus")
                     laptop_svg(size)
-                  elsif category_slug.include?("headphone") || name_down.include?("wh-1000") || name_down.include?("airpods") || name_down.include?("quietcomfort") || name_down.include?("momentum")
+    elsif category_slug.include?("headphone") || name_down.include?("wh-1000") || name_down.include?("airpods") || name_down.include?("quietcomfort") || name_down.include?("momentum")
                     headphones_svg(size)
-                  elsif category_slug.include?("camera") || name_down.include?("eos") || name_down.include?("nikon") || name_down.include?("gopro") || name_down.include?("fujifilm")
+    elsif category_slug.include?("camera") || name_down.include?("eos") || name_down.include?("nikon") || name_down.include?("gopro") || name_down.include?("fujifilm")
                     camera_svg(size)
-                  elsif category_slug.include?("watch") || name_down.include?("watch") || name_down.include?("forerunner")
+    elsif category_slug.include?("watch") || name_down.include?("watch") || name_down.include?("forerunner")
                     smartwatch_svg(size)
-                  elsif category_slug.include?("shoe") || name_down.include?("sneaker") || name_down.include?("ultraboost") || name_down.include?("cloud")
+    elsif category_slug.include?("shoe") || name_down.include?("sneaker") || name_down.include?("ultraboost") || name_down.include?("cloud")
                     shoe_svg(size)
-                  elsif category_slug.include?("clothing") || name_down.include?("hoodie") || name_down.include?("jacket") || name_down.include?("tee") || name_down.include?("jeans")
+    elsif category_slug.include?("clothing") || name_down.include?("hoodie") || name_down.include?("jacket") || name_down.include?("tee") || name_down.include?("jeans")
                     clothing_svg(size)
-                  elsif category_slug.include?("furniture") || name_down.include?("chair") || name_down.include?("sofa") || name_down.include?("shelf")
+    elsif category_slug.include?("furniture") || name_down.include?("chair") || name_down.include?("sofa") || name_down.include?("shelf")
                     furniture_svg(size)
-                  elsif category_slug.include?("kitchen") || name_down.include?("mixer") || name_down.include?("espresso")
+    elsif category_slug.include?("kitchen") || name_down.include?("mixer") || name_down.include?("espresso")
                     kitchen_svg(size)
-                  elsif category_slug.include?("fitness") || name_down.include?("bike") || name_down.include?("dumbbell")
+    elsif category_slug.include?("fitness") || name_down.include?("bike") || name_down.include?("dumbbell")
                     fitness_svg(size)
-                  elsif category_slug.include?("camping") || name_down.include?("tent") || name_down.include?("tumbler")
+    elsif category_slug.include?("camping") || name_down.include?("tent") || name_down.include?("tumbler")
                     camping_svg(size)
-                  elsif parent_slug.include?("book") || category_slug.include?("fiction") || category_slug.include?("book")
+    elsif parent_slug.include?("book") || category_slug.include?("fiction") || category_slug.include?("book")
                     book_svg(size)
-                  else
+    else
                     generic_product_svg(size)
-                  end
+    end
 
     tag.div(class: "#{container_class} bg-gradient-to-br from-slate-100 via-slate-50 to-indigo-50/40 border border-slate-200/60 flex items-center justify-center p-4 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-300") do
       svg_content.html_safe

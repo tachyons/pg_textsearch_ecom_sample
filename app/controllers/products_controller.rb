@@ -13,7 +13,7 @@ class ProductsController < ApplicationController
     @min_rating   = @search_params[:min_rating].presence&.to_f
     @in_stock     = ActiveModel::Type::Boolean.new.cast(@search_params[:in_stock])
     @sort         = @search_params[:sort].presence || (@query.present? ? "relevance" : "popular")
-    @page         = [@search_params[:page].to_i, 1].max
+    @page         = [ @search_params[:page].to_i, 1 ].max
     @per_page     = (@search_params[:per_page] || 24).to_i.clamp(1, 60)
 
     if @search_params[:q].present?
@@ -34,11 +34,10 @@ class ProductsController < ApplicationController
 
   def autocomplete
     @query = params[:q].to_s.strip
-    terms = Product.search_terms(@query)
 
-    @suggestions = if @query.length >= 2 && terms.present?
+    @suggestions = if @query.length >= 2
       Product.active
-             .bm25_search(:name, terms, index: :products_active_name_idx)
+             .bm25_search(:name, @query, index: :products_active_name_idx)
              .includes(:category, :brand)
              .limit(6)
     else

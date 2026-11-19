@@ -20,7 +20,7 @@ module Catalog
       @min_rating   = params[:min_rating].presence&.to_f
       @in_stock     = ActiveModel::Type::Boolean.new.cast(params[:in_stock])
       @sort         = params[:sort].presence || (@query.present? ? "relevance" : "popular")
-      @page         = [params[:page].to_i, 1].max
+      @page         = [ params[:page].to_i, 1 ].max
       @per_page     = (params[:per_page] || 24).to_i.clamp(1, 60)
     end
 
@@ -51,15 +51,12 @@ module Catalog
       scope = Product.active
       return scope if @query.blank?
 
-      terms = Product.search_terms(@query)
-      return scope.none if terms.blank?
-
-      if terms.length < 3
+      if @query.length < 3
         # 1-2 char terms are dropped by the english text config as stop words
-        scope.where("search_text ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(terms)}%")
+        scope.where("search_text ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%")
       else
         # prefix matching via @@ to_tsquery (pg_textsearch >= 0.1.5)
-        scope.where(Product.bm25_match(:search_text, terms, index: :products_active_search_idx, prefix: true))
+        scope.where(Product.bm25_match(:search_text, @query, index: :products_active_search_idx, prefix: true))
       end
     end
 
@@ -131,17 +128,17 @@ module Catalog
 
     def count_categories(scope)
       counts = scope.group(:category_id).count
-      Category.where(id: counts.keys).order(:name).map { |c| [c, counts[c.id]] }
+      Category.where(id: counts.keys).order(:name).map { |c| [ c, counts[c.id] ] }
     end
 
     def count_brands(scope)
       counts = scope.group(:brand_id).count
-      Brand.where(id: counts.keys).order(:name).map { |b| [b, counts[b.id]] }
+      Brand.where(id: counts.keys).order(:name).map { |b| [ b, counts[b.id] ] }
     end
 
     def count_labels(scope)
       counts = ProductLabel.where(product_id: scope.select(:id)).group(:label_id).count
-      Label.where(id: counts.keys).order(:name).map { |l| [l, counts[l.id]] }
+      Label.where(id: counts.keys).order(:name).map { |l| [ l, counts[l.id] ] }
     end
 
     def count_price_buckets(scope)
@@ -158,7 +155,7 @@ module Catalog
     end
 
     def count_ratings(scope)
-      [4, 3, 2].map do |stars|
+      [ 4, 3, 2 ].map do |stars|
         { stars: stars, count: scope.where("rating_avg >= ?", stars).count }
       end
     end

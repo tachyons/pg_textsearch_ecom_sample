@@ -190,7 +190,7 @@ product_data = [
 
   # Books > Non-Fiction
   { name: "Atomic Habits", category: "Books > Non-Fiction", brand: "Penguin Random House", price: 1699, stock: 600, rating: 4.8, popularity: 9900, desc: "Tiny changes, remarkable results." },
-  { name: "Outlive", category: "Books > Non-Fiction", brand: "Harmony", price: 1999, stock: 350, rating: 4.7, popularity: 8800, desc: "Science of longevity by Peter Attia." },
+  { name: "Outlive", category: "Books > Non-Fiction", brand: "Harmony", price: 1999, stock: 350, rating: 4.7, popularity: 8800, desc: "Science of longevity by Peter Attia." }
 ]
 
 product_data.each_with_index do |data, index|

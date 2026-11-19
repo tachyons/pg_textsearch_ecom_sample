@@ -67,18 +67,23 @@ class Catalog::SearchTest < ActiveSupport::TestCase
     assert_equal 2, result.total_count
   end
 
+  test "query with tsquery operators does not raise" do
+    assert_equal 0, Catalog::Search.new(q: "sony & canon").call.total_count
+    assert_equal 0, Catalog::Search.new(q: "(unbalanced").call.total_count
+  end
+
   test "filters by category" do
-    result = Catalog::Search.new(category_ids: [@category.id]).call
+    result = Catalog::Search.new(category_ids: [ @category.id ]).call
     assert_equal 3, result.total_count
   end
 
   test "filters by brand" do
-    result = Catalog::Search.new(brand_ids: [@brand.id]).call
+    result = Catalog::Search.new(brand_ids: [ @brand.id ]).call
     assert_equal 2, result.total_count
   end
 
   test "filters by label" do
-    result = Catalog::Search.new(label_ids: [@label.id]).call
+    result = Catalog::Search.new(label_ids: [ @label.id ]).call
     assert_equal 1, result.total_count
     assert_equal "iPhone 15 Pro", result.products.first.name
   end
@@ -133,7 +138,7 @@ class Catalog::SearchTest < ActiveSupport::TestCase
 
   test "disjunctive facets show counts excluding own filter" do
     # When filtering by Apple brand, brands facet should still show Samsung count
-    result = Catalog::Search.new(brand_ids: [@brand.id]).call
+    result = Catalog::Search.new(brand_ids: [ @brand.id ]).call
     brands_facet = result.facets[:brands]
     apple = brands_facet.find { |b, _| b.name == "Apple" }
     samsung = brands_facet.find { |b, _| b.name == "Samsung" }

@@ -39,13 +39,13 @@ class CreateCatalogTables < ActiveRecord::Migration[8.0]
     create_table :product_labels do |t|
       t.references :product, null: false, foreign_key: true
       t.references :label, null: false, foreign_key: true
-      t.index [:product_id, :label_id], unique: true
-      t.index [:label_id, :product_id]
+      t.index [ :product_id, :label_id ], unique: true
+      t.index [ :label_id, :product_id ]
     end
 
     # Supporting B-tree indexes for facet filtering & aggregates
-    add_index :products, [:active, :category_id]
-    add_index :products, [:active, :brand_id]
-    add_index :products, [:active, :price_cents]
+    add_index :products, [ :active, :category_id ]
+    add_index :products, [ :active, :brand_id ]
+    add_index :products, [ :active, :price_cents ]
   end
 end

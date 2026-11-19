@@ -7,6 +7,12 @@ class Product < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :in_stock, -> { where("stock_count > 0") }
 
+  # Strip tsquery metacharacters before passing user text to prefix search:
+  # pg_textsearch 0.1.5 feeds terms to to_tsquery, which raises on : & | ( ) (issue #22).
+  def self.search_terms(text)
+    text.to_s.gsub(/[^\p{Alnum}\s]/, " ").squish
+  end
+
   # BM25 declarations
   has_bm25 :search_text,
     index: :products_active_search_idx,

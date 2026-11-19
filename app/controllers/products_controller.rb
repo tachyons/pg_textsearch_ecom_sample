@@ -34,9 +34,11 @@ class ProductsController < ApplicationController
 
   def autocomplete
     @query = params[:q].to_s.strip
-    @suggestions = if @query.length >= 2
+    terms = Product.search_terms(@query)
+
+    @suggestions = if @query.length >= 2 && terms.present?
       Product.active
-             .bm25_search(:name, @query, index: :products_active_name_idx, prefix: true, unaccent: true)
+             .bm25_search(:name, terms, index: :products_active_name_idx)
              .includes(:category, :brand)
              .limit(6)
     else

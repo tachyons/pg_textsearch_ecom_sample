@@ -51,15 +51,15 @@ module Catalog
       scope = Product.active
       return scope if @query.blank?
 
-      # For very short queries (1-2 chars), use simple pattern matching
-      # since to_bm25query with English config filters out stop words/single chars
-      if @query.length < 3
-        scope.where("search_text ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%")
+      terms = Product.search_terms(@query)
+      return scope.none if terms.blank?
+
+      if terms.length < 3
+        # 1-2 char terms are dropped by the english text config as stop words
+        scope.where("search_text ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(terms)}%")
       else
-        # Use BM25 match operator with unaccent and prefix (*) for proper filtering
-        # This matches the logic used in bm25_search for ordering
-        query_with_prefix = "#{@query}:*"
-        scope.where("unaccent(search_text) <@> to_bm25query(unaccent(?), 'products_active_search_idx') < 0", query_with_prefix)
+        # prefix matching via @@ to_tsquery (pg_textsearch >= 0.1.5)
+        scope.where(Product.bm25_match(:search_text, terms, index: :products_active_search_idx, prefix: true))
       end
     end
 
@@ -95,15 +95,13 @@ module Catalog
 
     def apply_sorting(scope)
       if @query.present? && @sort == "relevance"
-        # Use bm25_search only for scoring/highlighting/ordering
-        # The WHERE clause is already applied in matched_scope + apply_filters
+        # Ranking/highlighting only: matched_scope already did the WHERE
         scope.bm25_search(
           :search_text,
           @query,
           index: :products_active_search_idx,
           select_score: true,
-          prefix: true,
-          unaccent: true,
+          filter: false,
           highlight: { start_sel: "<mark>", stop_sel: "</mark>", max_words: 28 },
           ranked_by: ":bm25 - (0.05 * LN(products.popularity_score + 1))",
           order_within_rank: "products.rating_avg DESC"

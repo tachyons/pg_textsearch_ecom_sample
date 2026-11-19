@@ -62,6 +62,11 @@ class Catalog::SearchTest < ActiveSupport::TestCase
     assert result.products.map(&:name).all? { |n| n.downcase.include?("iphone") }
   end
 
+  test "matches partial words with prefix search" do
+    result = Catalog::Search.new(q: "ipho").call
+    assert_equal 2, result.total_count
+  end
+
   test "filters by category" do
     result = Catalog::Search.new(category_ids: [@category.id]).call
     assert_equal 3, result.total_count
@@ -163,5 +168,13 @@ class Catalog::SearchTest < ActiveSupport::TestCase
     result = Catalog::Search.new(q: "iphoe").call
     # Fuzzy should match "iphone"
     assert result.total_count >= 0
+  end
+
+  test "relevance sort returns scored products ordered by the ranking expression" do
+    result = Catalog::Search.new(q: "camera").call
+
+    assert result.products.all? { |p| p.bm25_score.present? }
+    keys = result.products.map { |p| p.bm25_score - (0.05 * Math.log(p.popularity_score + 1)) }
+    assert_equal keys.sort, keys
   end
 end

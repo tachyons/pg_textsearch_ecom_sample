@@ -1,0 +1,206 @@
+<% content_for :title, @query.present? ? "Search: #{@query}" : "Browse Products" %>
+
+<%= turbo_frame_tag "catalog", data: { turbo_action: "advance" } do %>
+  <%= form_with url: products_path, method: :get, data: { controller: "catalog-form" } do |form| %>
+    <!-- Query hidden field to keep search in sync -->
+    <%= form.hidden_field :q, value: @query %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <!-- Facet Sidebar -->
+      <aside class="lg:col-span-1">
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs sticky top-24 space-y-6">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+              </svg>
+              <h2 class="text-sm font-bold text-slate-900 tracking-tight">Filters</h2>
+            </div>
+
+            <% if any_filters_active? %>
+              <%= link_to products_path(q: @query.presence),
+                    data: { turbo_frame: "catalog", turbo_action: "advance" },
+                    class: "text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline transition-colors" do %>
+                Reset all
+              <% end %>
+            <% end %>
+          </div>
+
+          <!-- Active Filters -->
+          <% if any_filters_active? %>
+            <div class="space-y-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Filters</h3>
+              <div class="flex flex-wrap gap-1.5">
+                <%= render_active_filter_chips(form) %>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Categories -->
+          <%= render_facet_section(form, :category_ids, "Categories", @result.facets[:categories]) %>
+
+          <!-- Brands -->
+          <%= render_facet_section(form, :brand_ids, "Brands", @result.facets[:brands]) %>
+
+          <!-- Tags -->
+          <%= render_facet_section(form, :label_ids, "Tags & Badges", @result.facets[:labels]) %>
+
+          <!-- Price Buckets -->
+          <%= render_price_facet_section(form) %>
+
+          <!-- Ratings -->
+          <%= render_rating_facet_section(form) %>
+
+          <!-- In Stock Only -->
+          <div class="border-t border-slate-200/80 pt-4">
+            <label class="flex items-center justify-between gap-3 p-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+              <div class="flex items-center gap-2.5">
+                <%= form.check_box :in_stock,
+                      { checked: @in_stock,
+                        class: "w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition cursor-pointer",
+                        data: { action: "change->catalog-form#submit" } } %>
+                <span class="text-sm font-medium text-slate-800 select-none">In Stock Only</span>
+              </div>
+              <span class="text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                <%= @result.facets[:in_stock] %>
+              </span>
+            </label>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Product Area -->
+      <div class="lg:col-span-3 space-y-5">
+        <!-- Aggregates & Metrics Bar -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <!-- Left: Result count, Query, and BM25 Latency -->
+          <div class="flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
+            <div class="flex items-center gap-1.5 font-bold text-slate-900 text-sm">
+              <span><%= @result.total_count %></span>
+              <span class="font-medium text-slate-500 text-xs">products</span>
+            </div>
+
+            <% if @query.present? %>
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-xs border border-indigo-100">
+                <span>matching "<%= @query %>"</span>
+                <%= link_to products_path(search_params.to_h.except("q")),
+                      data: { turbo_frame: "catalog", turbo_action: "advance" },
+                      class: "text-indigo-400 hover:text-indigo-800 transition-colors" do %>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <% end %>
+              </span>
+            <% end %>
+
+            <span class="text-slate-300">·</span>
+
+            <!-- Technical BM25 showcase pill -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-mono text-[11px] font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>⚡ <%= @result.latency_ms %>ms</span>
+              <span class="text-emerald-600/80 font-sans text-[10px]">BM25</span>
+            </div>
+
+            <% if @result.aggregates[:avg_price_cents].to_i > 0 %>
+              <span class="hidden sm:inline text-slate-300">·</span>
+              <span class="hidden sm:inline text-slate-500">
+                Avg <span class="font-semibold text-slate-800">$<%= number_with_precision(@result.aggregates[:avg_price_cents] / 100.0, precision: 0) %></span>
+              </span>
+            <% end %>
+
+            <% if @result.aggregates[:avg_rating].to_f > 0 %>
+              <span class="hidden md:inline text-slate-300">·</span>
+              <span class="hidden md:inline text-slate-500">
+                ★ <span class="font-semibold text-slate-800"><%= number_with_precision(@result.aggregates[:avg_rating], precision: 1) %></span>
+              </span>
+            <% end %>
+          </div>
+
+          <!-- Right: Sort Dropdown -->
+          <div class="flex items-center gap-2 self-end sm:self-auto">
+            <%= form.label :sort, "Sort by", class: "text-xs font-semibold text-slate-500 whitespace-nowrap" %>
+            <div class="relative">
+              <%= form.select :sort,
+                [
+                  ["BM25 Relevance", "relevance"],
+                  ["Most Popular", "popular"],
+                  ["Price: Low to High", "price_asc"],
+                  ["Price: High to Low", "price_desc"],
+                  ["Highest Rated", "rating"],
+                  ["Newest Arrivals", "newest"]
+                ],
+                { selected: @sort },
+                { class: "appearance-none bg-slate-50 hover:bg-slate-100/80 text-xs font-semibold text-slate-700 py-1.5 pl-3 pr-8 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer transition-colors",
+                  data: { action: "change->catalog-form#submit" } } %>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Grid or Empty State -->
+        <% if @result.products.any? %>
+          <div id="products_grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <% @result.products.each do |product| %>
+              <%= render "product_card", product: product %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-50 mx-auto flex items-center justify-center text-indigo-600 mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">No products match your criteria</h3>
+            <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
+              We couldn't find any products matching your active search or filters. Try adjusting your query or resetting your filters.
+            </p>
+            <%= link_to "Clear all filters & search", root_path,
+                  data: { turbo_frame: "catalog", turbo_action: "advance" },
+                  class: "inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors" %>
+          </div>
+        <% end %>
+
+        <!-- Pagination -->
+        <% if @result.total_count > @result.products.size %>
+          <div class="pt-6 border-t border-slate-200/80 flex items-center justify-center gap-3">
+            <% prev_page = @page > 1 ? @page - 1 : nil %>
+            <% total_pages = (@result.total_count.to_f / @per_page).ceil %>
+            <% next_page = @page < total_pages ? @page + 1 : nil %>
+
+            <% if prev_page %>
+              <%= form.button type: "submit", name: "page", value: prev_page, class: "inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer" do %>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>Previous</span>
+              <% end %>
+            <% else %>
+              <button disabled class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-100 bg-slate-50 text-slate-400 text-xs font-medium rounded-xl cursor-not-allowed">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                <span>Previous</span>
+              </button>
+            <% end %>
+
+            <span class="px-3 py-1 text-xs font-medium text-slate-500 tabular-nums">
+              Page <strong class="text-slate-800"><%= @page %></strong> of <strong class="text-slate-800"><%= total_pages %></strong>
+            </span>
+
+            <% if next_page %>
+              <%= form.button type: "submit", name: "page", value: next_page, class: "inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer" do %>
+                <span>Next</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              <% end %>
+            <% else %>
+              <button disabled class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-100 bg-slate-50 text-slate-400 text-xs font-medium rounded-xl cursor-not-allowed">
+                <span>Next</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

@@ -1,0 +1,5 @@
+<%= turbo_stream.replace "cart_badge" do %>
+  <span id="cart_badge" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center shadow-xs">
+    <%= current_cart.total_items %>
+  </span>
+<% end %>

@@ -1,0 +1,20 @@
+<%= turbo_stream.replace "cart_badge" do %>
+  <span id="cart_badge" class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center shadow-xs">
+    <%= current_cart.total_items %>
+  </span>
+<% end %>
+
+<%= turbo_stream.prepend "flash_toasts" do %>
+  <div class="pointer-events-auto bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white text-xs px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 transition-all duration-200" role="alert">
+    <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-semibold text-slate-100 truncate">Added to cart</p>
+      <p class="text-[11px] text-slate-400 truncate"><%= @cart_item.product.name %></p>
+    </div>
+    <button type="button" class="text-slate-400 hover:text-white p-1 cursor-pointer" onclick="this.closest('[role=alert]').remove()">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+  </div>
+<% end %>

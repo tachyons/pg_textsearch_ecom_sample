@@ -1,0 +1,49 @@
+<%= turbo_frame_tag "autocomplete_results" do %>
+  <% if @suggestions.any? %>
+    <div class="p-2 border-b border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400 px-3 uppercase tracking-wider">
+      <span>Instant Suggestions</span>
+      <span class="text-indigo-600 font-medium lowercase">pg_textsearch BM25</span>
+    </div>
+    <ul class="py-1 divide-y divide-slate-50" role="listbox">
+      <% @suggestions.each do |product| %>
+        <li role="option">
+          <%= link_to product_path(product.slug), data: { turbo_frame: "_top" }, class: "flex items-center gap-3 px-3 py-2.5 hover:bg-indigo-50/60 transition-colors group" do %>
+            <div class="flex-shrink-0">
+              <%= product_visual(product, size: :thumb) %>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-slate-900 group-hover:text-indigo-600 text-sm truncate transition-colors">
+                <%= highlight(product.name, @query, highlighter: '<mark class="bg-amber-100 text-amber-900 font-semibold px-0.5 rounded">\1</mark>') %>
+              </div>
+              <div class="text-xs text-slate-500 truncate mt-0.5">
+                <%= product.brand.name %> · <%= product.category.name %>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <span class="text-sm font-bold text-slate-900">
+                <%= number_to_currency(product.price_cents / 100.0) %>
+              </span>
+              <% if product.stock_count > 0 %>
+                <div class="text-[10px] text-emerald-600 font-medium">In stock</div>
+              <% else %>
+                <div class="text-[10px] text-rose-500 font-medium">Out of stock</div>
+              <% end %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <div class="p-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-3">
+      <span>Press <kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600">Enter</kbd> to search all</span>
+      <span class="text-[11px] text-slate-400">Esc to close</span>
+    </div>
+  <% else %>
+    <div class="py-6 px-4 text-center">
+      <div class="w-8 h-8 rounded-full bg-slate-100 mx-auto flex items-center justify-center text-slate-400 mb-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+      <p class="text-xs font-medium text-slate-600">No suggestions found for "<%= @query %>"</p>
+      <p class="text-[11px] text-slate-400 mt-0.5">Press Enter to run a broader full-text search</p>
+    </div>
+  <% end %>
+<% end %>

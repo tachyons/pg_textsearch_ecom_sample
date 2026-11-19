@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@layer base {
+  ::selection {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
+
+  mark {
+    background-color: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Turbo frame loading animation */
+turbo-frame[busy] {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 150ms ease-in-out;
+}

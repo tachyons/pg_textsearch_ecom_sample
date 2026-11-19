@@ -92,15 +92,17 @@ jobs:
             https://github.com/timescale/pg_textsearch/releases/download/v1.5.1/pg-textsearch-v1.5.1-pg17-amd64.zip
           unzip -o /tmp/pg_textsearch.zip -d /tmp/pg_textsearch
           sudo dpkg -i /tmp/pg_textsearch/*.deb
-          sudo pg_createcluster 17 main --start || true
+          sudo pg_createcluster 17 main --start || sudo pg_ctlcluster 17 main start
           sudo sed -i "s/^#*shared_preload_libraries.*/shared_preload_libraries = 'pg_textsearch'/" \
             /etc/postgresql/17/main/postgresql.conf
           sudo pg_ctlcluster 17 main restart
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+          PGPORT=$(pg_lsclusters -h | awk '$1 == 17 { print $3; exit }')
+          sudo -u postgres psql -p "$PGPORT" -c "ALTER USER postgres PASSWORD 'postgres';"
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:$PGPORT" >> "$GITHUB_ENV"
 
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          # DATABASE_URL set by the PostgreSQL install step
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: bin/rails db:test:prepare test
